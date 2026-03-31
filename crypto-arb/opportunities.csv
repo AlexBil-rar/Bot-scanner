@@ -1,0 +1,7 @@
+timestamp_ms,buy_exchange,sell_exchange,symbol,buy_price,sell_price,raw_spread_pct,normalized_spread_pct,profit_pct,max_size_usd,expected_profit_usd,signal_duration_ms,tick_count,signal_score,signal_status,usdt_rate,is_stale
+1774978723168,coinbase,bybit,ETH,2098.4800,2103.5100,0.239697,0.189577,0.039577,390.53,0.1546,12871,239,7,strong,0.999500,false
+1774978724204,coinbase,bybit,ETH,2098.4800,2103.5100,0.239697,0.189577,0.039577,390.53,0.1546,13907,258,7,strong,0.999500,false
+1774978724719,coinbase,bitget,ETH,2098.4800,2102.9500,0.213011,0.162905,0.012905,799.10,0.1031,20599,477,6,strong,0.999500,false
+1774978725229,coinbase,bybit,ETH,2098.4800,2104.0000,0.263048,0.212916,0.062916,2916.57,1.8350,14932,276,8,strong,0.999500,false
+1774978725735,coinbase,bitget,ETH,2098.4800,2103.8500,0.255900,0.205772,0.055772,2916.57,1.6266,21615,500,8,strong,0.999500,false
+1774979561257,coinbase,bybit,SOL,82.2100,82.3900,0.218951,0.168842,0.018842,6940.40,1.3077,1990,34,6,strong,0.999500,false
