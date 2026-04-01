@@ -14,7 +14,7 @@ def get_data():
         return None
 
     # Читаем капитал из .env
-    capital = 500.0
+    capital = 300.0
     env_file = Path('.env')
     if not env_file.exists():
         env_file = Path('.env.example')
