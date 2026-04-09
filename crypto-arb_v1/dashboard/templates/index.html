@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Crypto Arb Dashboard{% endblock %}
+{% block page_title %}Crypto Arb Scanner{% endblock %}
+
+{% block header_extras %}
+<span id="usdt-badge" class="usdt-badge">USDT —</span>
+<div class="live"><div class="dot"></div><span id="last-update">—</span></div>
+<button class="btn" onclick="loadData()">Обновить</button>
+{% endblock %}
+
+{% block content %}
+
+<!-- Метрики -->
+<div class="grid4">
+  <div class="metric">
+    <div class="metric-label">Всего сигналов</div>
+    <div class="metric-value green" id="m-total">—</div>
+    <div class="metric-sub">уникальных окон</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Avg profit (norm)</div>
+    <div class="metric-value blue" id="m-avg-profit">—</div>
+    <div class="metric-sub" id="m-raw-spread">raw —</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Max profit</div>
+    <div class="metric-value amber" id="m-max-profit">—</div>
+    <div class="metric-sub">лучший сигнал</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Реальная прибыль</div>
+    <div class="metric-value green" id="profit-real">—</div>
+    <div class="metric-sub" id="profit-real-sub">расчёт системы</div>
+  </div>
+</div>
+
+<!-- Балансы + spread chart -->
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Балансы бирж (обновление раз в минуту)</div>
+    <div id="balances-content"><div class="loading">Загрузка...</div></div>
+    <div class="profit-section" style="grid-template-columns:repeat(3,1fr)">
+      <div class="profit-box">
+        <div class="profit-box-label">Приблизительная</div>
+        <div class="profit-box-value green" id="profit-est">$0.00</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">по сигналам бота</div>
+      </div>
+      <div class="profit-box">
+        <div class="profit-box-label">Холд</div>
+        <div class="profit-box-value green" id="profit-hold">$—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">рост цены крипты</div>
+      </div>
+      <div class="profit-box">
+        <div class="profit-box-label">Трейдинг</div>
+        <div class="profit-box-value green" id="profit-trading">$—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">арбитраж сделки</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Raw vs Normalized spread</div>
+    <div class="chart-wrap"><canvas id="spreadChart"></canvas></div>
+    <div id="spread-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">ТЕКУЩИЙ RAW</div>
+        <div id="ss-current" style="font-size:14px;font-weight:600">—</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">МАКС RAW</div>
+        <div id="ss-max" style="font-size:14px;font-weight:600;color:var(--amber)">—</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">USDT ПРЕМИЯ</div>
+        <div id="ss-premium" style="font-size:14px;font-weight:600;color:var(--blue)">—</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">ДО ПОРОГА</div>
+        <div id="ss-gap" style="font-size:14px;font-weight:600">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Графики -->
+<div class="grid3">
+  <div class="card"><div class="card-title">По символам</div><div class="chart-wrap"><canvas id="symChart"></canvas></div></div>
+  <div class="card"><div class="card-title">Profit distribution</div><div class="chart-wrap"><canvas id="profitChart"></canvas></div></div>
+  <div class="card"><div class="card-title">Signal duration</div><div class="chart-wrap"><canvas id="durChart"></canvas></div></div>
+</div>
+
+<!-- Топ пары -->
+<div class="card">
+  <div class="card-title">Топ пары</div>
+  <div id="pairs-bars"></div>
+</div>
+
+<!-- Реальные ордера -->
+<div class="card">
+  <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Реальные ордера (с 1 апреля)</span>
+    <span id="orders-count" style="font-size:11px;color:var(--muted)">загрузка...</span>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Время</th><th>Биржа</th><th>Символ</th>
+      <th>Сторона</th><th>Количество</th><th>Цена</th><th>Итого</th>
+    </tr></thead>
+    <tbody id="orders-table">
+      <tr><td colspan="7" style="color:var(--muted);text-align:center">Загрузка...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Последние сигналы -->
+<div class="card">
+  <div class="card-title">Последние сигналы</div>
+  <table>
+    <thead><tr>
+      <th>Время</th><th>Пара</th><th>Символ</th>
+      <th>Profit</th><th>Norm spread</th><th>Size</th>
+      <th>Duration</th><th>Score</th><th>Status</th>
+    </tr></thead>
+    <tbody id="signals-table"></tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

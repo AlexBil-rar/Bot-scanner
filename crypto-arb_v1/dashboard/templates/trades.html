@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% set active = "trades" %}
+{% block title %}Trade Diary{% endblock %}
+{% block page_title %}Trade Diary{% endblock %}
+
+{% block content %}
+
+<!-- ── Арбитражные метрики ──────────────────────────────────── -->
+<div class="grid4">
+  <div class="metric"><div class="metric-label">Successful trades</div><div class="metric-value green" id="mt">—</div></div>
+  <div class="metric"><div class="metric-label">Total arb profit</div><div class="metric-value green" id="mp">—</div></div>
+  <div class="metric"><div class="metric-label">Avg profit/trade</div><div class="metric-value" id="ma">—</div></div>
+  <div class="metric"><div class="metric-label">Avg latency</div><div class="metric-value" id="ml2">—</div></div>
+</div>
+<div class="grid3">
+  <div class="metric"><div class="metric-label">Volume traded</div><div class="metric-value" id="mv2">—</div></div>
+  <div class="metric"><div class="metric-label">Win rate</div><div class="metric-value green" id="mw">—</div></div>
+  <div class="metric"><div class="metric-label">Skipped (no funds)</div><div class="metric-value amber" id="mf">—</div></div>
+</div>
+
+<!-- ── Секция ликвидности ───────────────────────────────────── -->
+<div class="section-divider">
+  <span class="section-label">💧 Liquidity Sales (non-arbitrage)</span>
+</div>
+
+<div class="grid4">
+  <div class="metric">
+    <div class="metric-label">Total sales</div>
+    <div class="metric-value" id="ls-total">—</div>
+    <div class="metric-sub" id="ls-types">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Total P&amp;L</div>
+    <div class="metric-value" id="ls-pnl">—</div>
+    <div class="metric-sub" id="ls-avg-pnl">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Result breakdown</div>
+    <div class="liq-breakdown" id="ls-breakdown">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Failed attempts</div>
+    <div class="metric-value amber" id="ls-failed">—</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Liquidity sales — by exchange &amp; symbol</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Exchange</th>
+        <th>Symbol</th>
+        <th>Type</th>
+        <th>Count</th>
+        <th>Total P&amp;L</th>
+        <th>Avg P&amp;L</th>
+        <th>✅ Profit</th>
+        <th>🔴 Zero/Loss</th>
+      </tr>
+    </thead>
+    <tbody id="liq-by-exch"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-title">Liquidity sales — history</div>
+  <div id="liq-history"></div>
+</div>
+
+<!-- ── Арбитражные пары ─────────────────────────────────────── -->
+<div class="section-divider">
+  <span class="section-label">⚡ Arbitrage Trades</span>
+</div>
+
+<div class="card">
+  <div class="card-title">By exchange pair</div>
+  <table>
+    <thead><tr><th>Pair</th><th>Trades</th><th>Volume</th><th>Profit</th></tr></thead>
+    <tbody id="pt"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-title">Trade history</div>
+  <div id="tl"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/trades.js"></script>
+{% endblock %}

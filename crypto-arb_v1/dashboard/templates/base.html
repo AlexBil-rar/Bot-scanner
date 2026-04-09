@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Crypto Arb{% endblock %}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/css/main.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="header">
+  <h1>{% block page_title %}Crypto Arb{% endblock %}</h1>
+  <div style="display:flex;gap:12px;align-items:center">
+    {% block header_extras %}{% endblock %}
+    <nav class="nav">
+      <a href="/"      {% if active == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+      <a href="/trades"{% if active == 'trades'    %}class="active"{% endif %}>Trades</a>
+      <a href="/logs"  {% if active == 'logs'      %}class="active"{% endif %}>Logs</a>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+  {% block content %}{% endblock %}
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
