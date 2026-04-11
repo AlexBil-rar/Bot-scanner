@@ -44,8 +44,8 @@ pub async fn stream(rate: UsdtRate) {
                                     if usdc_per_usdt > 0.0 {
                                         let usdt_in_usd = 1.0 / usdc_per_usdt;
                                         set_rate(&rate, usdt_in_usd);
-                                        // Логируем только если сильно отклоняется от 1.0
-                                        if (usdt_in_usd - 1.0).abs() > 0.0005 {
+                                        // Логируем только если отклоняется > 0.5%
+                                        if (usdt_in_usd - 1.0).abs() > 0.005 {
                                             warn!("[usdt-usd] USDT = ${:.6} (deviation={:+.4}%)",
                                                 usdt_in_usd, (usdt_in_usd - 1.0) * 100.0);
                                         }

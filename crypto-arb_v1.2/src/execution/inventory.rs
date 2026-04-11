@@ -82,17 +82,34 @@ impl LiquidityRecovery {
         info!("💧 [LIQ] cleared lot: {} {}", exchange, asset);
     }
 
+    /// Обновить qty лота (например, после частичной продажи)
+    /// Если qty <= 0 — лот удаляется
+    pub fn update_lot_qty(&mut self, exchange: &str, asset: &str, new_qty: f64) {
+        let key = (exchange.to_string(), asset.to_string());
+        if new_qty <= 0.0001 {
+            self.lots.remove(&key);
+            info!("💧 [LIQ] lot removed (qty too small): {} {}", exchange, asset);
+        } else if let Some(lot) = self.lots.get_mut(&key) {
+            info!(
+                "💧 [LIQ] lot qty updated: {} {} {:.4} → {:.4}",
+                exchange, asset, lot.qty, new_qty
+            );
+            lot.qty = new_qty;
+        }
+    }
+
     /// Проверить: нужно ли продать лот для возврата ликвидности?
     /// Триггер: stable_ratio < порога (цель 50%, триггер 30%)
     /// Выход: только если цена >= break_even (ноль или плюс)
     /// Возвращает (exchange, asset, qty)
+    /// Проверить: нужно ли продать лот для возврата ликвидности?
     pub fn check_exits(
         &self,
-        // exchange → (stable_usd, total_usd на бирже)
+        inventory: &InventoryManager, // <-- 1. ДОБАВЛЯЕМ ЭТОТ ПАРАМЕТР
         exchange_totals: &HashMap<String, (f64, f64)>,
         current_prices: &HashMap<(String, String), f64>,
-        stable_ratio_threshold: f64, // триггер — например 0.30 (30%)
-        min_age_ms: u64,             // минимальный возраст лота, например 300_000 (5 мин)
+        stable_ratio_threshold: f64,
+        min_age_ms: u64,             
     ) -> Vec<(String, String, f64)> {
         let now = now_ms();
         let mut exits = vec![];
@@ -103,17 +120,13 @@ impl LiquidityRecovery {
                 .copied()
                 .unwrap_or((0.0, 0.0));
 
-            // Считаем текущий stable ratio на бирже
             let stable_ratio = if total > 1.0 { stable / total } else { 1.0 };
 
-            // Не трогаем если стейблов достаточно (выше порога)
             if stable_ratio >= stable_ratio_threshold {
                 continue;
             }
 
             let age_ms = now - lot.timestamp_ms;
-
-            // Не трогаем свежие лоты
             if age_ms < min_age_ms {
                 let secs_left = (min_age_ms - age_ms) / 1000;
                 info!(
@@ -134,13 +147,31 @@ impl LiquidityRecovery {
                 continue;
             }
 
-            // Продаём только ноль или плюс — капитал важнее
+            // --- 2. НОВЫЙ БЛОК: ПРОВЕРЯЕМ РЕАЛЬНЫЙ БАЛАНС ---
+            let actual_balance = inventory.get_balance(exchange, asset);
+            let mut qty_to_sell = lot.qty;
+
+            if actual_balance < qty_to_sell {
+                tracing::warn!(
+                    "💧 [LIQ] Баланс меньше лота: lot={:.4}, actual={:.4} ({} {}). Корректируем объем.",
+                    qty_to_sell, actual_balance, exchange, asset
+                );
+                qty_to_sell = actual_balance;
+            }
+
+            // Если остались сущие копейки (пыль), нет смысла тратить на комсу
+            if qty_to_sell <= 0.0001 {
+                continue;
+            }
+            // --------------------------------------------------
+
             if current_price >= break_even {
                 info!(
                     "💧 [LIQ] EXIT signal: {} {:.4} {} price={:.4} >= break_even={:.4} (stable={:.0}%)",
-                    exchange, lot.qty, asset, current_price, break_even, stable_ratio * 100.0
+                    exchange, qty_to_sell, asset, current_price, break_even, stable_ratio * 100.0
                 );
-                exits.push((exchange.clone(), asset.clone(), lot.qty));
+                // 3. ОТПРАВЛЯЕМ СКОРРЕКТИРОВАННЫЙ ОБЪЕМ (qty_to_sell)
+                exits.push((exchange.clone(), asset.clone(), qty_to_sell)); 
             } else {
                 let pct_away = (break_even - current_price) / break_even * 100.0;
                 info!(

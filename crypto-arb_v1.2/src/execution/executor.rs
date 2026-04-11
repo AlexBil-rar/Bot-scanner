@@ -666,6 +666,10 @@ impl ArbitrageExecutor {
                             }
                         }
 
+                        // Очищаем лот в LiquidityRecovery — иначе он будет пытаться
+                        // продать ту же монету снова бесконечно
+                        self.liquidity_recovery.clear_lot(&exchange, &symbol);
+
                         to_remove.push((exchange.clone(), symbol.clone()));
                     }
                     Err(e) => {
@@ -742,6 +746,7 @@ impl ArbitrageExecutor {
         }
 
         let exits = self.liquidity_recovery.check_exits(
+            &self.inventory, // <-- ДОБАВИЛИ ВОТ ЭТУ СТРОКУ
             &exchange_totals,
             current_prices,
             0.30,
